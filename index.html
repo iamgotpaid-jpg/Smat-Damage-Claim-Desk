@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porter Claims Resolver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-8">
+        <!-- Main Title -->
+        <h1 class="text-3xl font-bold text-center text-gray-800">Porter Damage Claims Resolver</h1>
+        
+        <!-- Welcome Message & Instructions -->
+        <div class="text-center text-gray-600">
+            <p>Welcome! Use this tool to efficiently resolve damage claims based on the official SOP and Terms & Conditions.</p>
+            <p class="mt-2 text-sm text-gray-500">Please fill out the form below to determine the appropriate compensation and action.</p>
+        </div>
+
+        <!-- Claim Details Form -->
+        <div class="grid md:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-xl">
+            <!-- Order Type -->
+            <div>
+                <label for="order-type" class="block text-sm font-medium text-gray-700">Order Type</label>
+                <select id="order-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    <option value="">Select Order Type</option>
+                    <option value="intracity">Intracity</option>
+                    <option value="intercity">Intercity</option>
+                </select>
+            </div>
+
+            <!-- Packaging Type (Intracity only) -->
+            <div id="packaging-type-container" class="hidden">
+                <label for="packaging-type" class="block text-sm font-medium text-gray-700">Packaging Type (Intracity)</label>
+                <select id="packaging-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    <option value="">Select Packaging</option>
+                    <option value="single">Single Layer</option>
+                    <option value="multi">Multi-Layer</option>
+                </select>
+            </div>
+
+            <!-- Truck Load Type (Intercity only) -->
+            <div id="truck-load-container" class="hidden">
+                <label for="truck-load" class="block text-sm font-medium text-gray-700">Truck Load Type (Intercity)</label>
+                <select id="truck-load" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    <option value="">Select Truck Load</option>
+                    <option value="ptl">Part Truck Load (PTL)</option>
+                    <option value="ftl">Full Truck Load (FTL)</option>
+                </select>
+            </div>
+
+            <!-- House Size -->
+            <div>
+                <label for="house-size" class="block text-sm font-medium text-gray-700">House Size</label>
+                <select id="house-size" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    <option value="">Select House Size</option>
+                    <option value="1bhk-below">1BHK Big and Below</option>
+                    <option value="2bhk-above">2BHK Small and Above</option>
+                </select>
+            </div>
+
+            <!-- Item Invoice Value -->
+            <div>
+                <label for="invoice-value" class="block text-sm font-medium text-gray-700">Item Invoice Value (₹)</label>
+                <input type="number" id="invoice-value" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="e.g., 25000">
+            </div>
+
+            <!-- Damage Classification -->
+            <div>
+                <label for="damage-type" class="block text-sm font-medium text-gray-700">Damage Classification</label>
+                <select id="damage-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    <option value="">Select Damage Type</option>
+                    <option value="minor">Minor Damage (20%)</option>
+                    <option value="major">Major Damage (60%)</option>
+                    <option value="extreme">Extreme Damage (100%)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Additional Conditions -->
+        <div class="bg-gray-50 p-6 rounded-xl">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Additional Conditions</h3>
+            <div class="flex items-center">
+                <input id="has-invoice" name="has-invoice" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                <label for="has-invoice" class="ml-2 block text-sm text-gray-900">
+                    Customer has provided a valid purchase invoice
+                </label>
+            </div>
+            <div class="flex items-center mt-2">
+                <input id="is-repairable" name="is-status" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                <label for="is-repairable" class="ml-2 block text-sm text-gray-900">
+                    The item is repairable
+                </label>
+            </div>
+            <div class="flex items-center mt-2">
+                <input id="is-non-repairable" name="is-status" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                <label for="is-non-repairable" class="ml-2 block text-sm text-gray-900">
+                    The item is non-repairable
+                </label>
+            </div>
+            <div class="mt-4 hidden" id="repair-cost-container">
+                <label for="repair-cost" class="block text-sm font-medium text-gray-700">Repair Estimate (₹)</label>
+                <input type="number" id="repair-cost" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="e.g., 3000">
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-center">
+            <button id="calculate-btn" class="bg-indigo-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+                Calculate & Resolve
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-container" class="hidden p-6 bg-green-50 border-2 border-green-300 rounded-xl space-y-4">
+            <h2 class="text-xl font-bold text-center text-green-800">Case Resolution</h2>
+            <div class="text-center">
+                <p id="claim-limit" class="text-sm font-medium text-green-700"></p>
+                <p id="compensation-amount" class="text-2xl font-bold text-green-900 mt-2"></p>
+            </div>
+            <p id="final-action" class="text-lg text-center text-green-800"></p>
+            <div id="repair-note" class="text-sm text-center text-green-700 hidden"></div>
+        </div>
+        
+        <!-- New Section: Repair & Compensation Bifurcations -->
+        <div class="bg-gray-50 p-6 rounded-xl border-t-2 border-gray-200">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Repair & Compensation Bifurcations</h3>
+            <p class="text-sm text-center text-gray-600 mb-4">Add items below to calculate the compensation split between Porter and the Partner.</p>
+            
+            <div id="items-table" class="space-y-4">
+                <!-- Table Header -->
+                <div class="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700 border-b pb-2">
+                    <div class="col-span-2">Type</div>
+                    <div class="col-span-3">Item</div>
+                    <div class="col-span-2">Damage Type</div>
+                    <div class="col-span-2">Repair/Comp Cost (₹)</div>
+                    <div class="col-span-1">Porter</div>
+                    <div class="col-span-1">Partner</div>
+                    <div class="col-span-1"></div>
+                </div>
+            </div>
+
+            <button id="add-item-btn" class="mt-4 w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-blue-600 transition-colors duration-300">
+                + Add New Item
+            </button>
+
+            <!-- Summary Table -->
+            <div class="mt-8 p-4 bg-gray-100 rounded-xl">
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">Summary</h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-700">Total Born By Partner:</span>
+                        <span id="total-partner-comp" class="font-bold text-gray-900">₹0</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-300 pt-2 mt-2">
+                        <span class="font-medium text-gray-700">White Good Compensation:</span>
+                        <span id="total-white-comp" class="font-bold text-gray-900">₹0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-700">Non-White Good Compensation:</span>
+                        <span id="total-non-white-comp" class="font-bold text-gray-900">₹0</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-300 pt-2 mt-2">
+                        <span class="text-lg font-bold text-gray-800">Grand Total Amount:</span>
+                        <span id="grand-total-comp" class="text-lg font-bold text-gray-800">₹0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Checklist -->
+        <div class="bg-white p-6 rounded-xl border-t-2 border-gray-200">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Standard Claim Process Checklist</h3>
+            <ul class="list-disc list-inside space-y-2 text-gray-600">
+                <li><strong class="text-gray-900">Initial Report:</strong> Was the damage reported within 7 days of shifting completion?</li>
+                <li><strong class="text-gray-900">Documentation:</strong> Did the customer submit proof (photos/video) within 48 hours of reporting? (If not, send 12h/24h reminders).</li>
+                <li><strong class="text-gray-900">Un-invoiced Items:</strong> If no invoice, is the item a carton or a self-packed good? (Caps apply).</li>
+                <li><strong class="text-gray-900">Pre-existing Damage:</strong> Does the vendor have photo proof of pre-existing damage? If not, it's assumed to be new damage.</li>
+                <li><strong class="text-gray-900">Repair-First Approach:</strong> If repairable, has Urban Company been booked, or has the customer provided a GST repair estimate?</li>
+                <li><strong class="text-gray-900">Finalization:</strong> Once resolved, escalate the case to the city team with the summary, penalty, and photos.</li>
+                <li><strong class="text-gray-900">Missing Items:</strong> Did the vendor return the item within 48 hours? If not, proceed with refund as per invoice/cap.</li>
+            </ul>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 text-sm mt-8">
+            &copy; 2025 Created by Shahalam Khan | Business Executive | House Shifting | All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const orderTypeSelect = document.getElementById('order-type');
+            const packagingTypeContainer = document.getElementById('packaging-type-container');
+            const truckLoadContainer = document.getElementById('truck-load-container');
+            const isRepairableCheckbox = document.getElementById('is-repairable');
+            const isNonRepairableCheckbox = document.getElementById('is-non-repairable');
+            const repairCostContainer = document.getElementById('repair-cost-container');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const compensationAmountText = document.getElementById('compensation-amount');
+            const finalActionText = document.getElementById('final-action');
+            const claimLimitText = document.getElementById('claim-limit');
+            const repairCostInput = document.getElementById('repair-cost');
+            const repairNoteDiv = document.getElementById('repair-note');
+            const hasInvoiceCheckbox = document.getElementById('has-invoice');
+
+            // New elements for the bifurcation table
+            const addItemBtn = document.getElementById('add-item-btn');
+            const itemsTable = document.getElementById('items-table');
+            const totalPartnerCompSpan = document.getElementById('total-partner-comp');
+            const totalWhiteCompSpan = document.getElementById('total-white-comp');
+            const totalNonWhiteCompSpan = document.getElementById('total-non-white-comp');
+            const grandTotalCompSpan = document.getElementById('grand-total-comp');
+
+            // Data for the new section
+            const whiteGoods = ['TV', 'Fridge', 'Water Purifier', 'Geyser', 'Washing Machine', 'Microwave oven', 'Dishwasher', 'Split AC', 'Window AC'];
+            const nonWhiteGoods = ['Bed', 'Sofa', 'Almirah', 'Ceiling Fan', 'Bookshelf', 'Tables', 'Chairs', 'Others'];
+            const damageTypes = ['Minor', 'Major', 'Extreme'];
+
+            // Mutually exclusive checkbox logic
+            isRepairableCheckbox.addEventListener('change', () => {
+                if (isRepairableCheckbox.checked) {
+                    isNonRepairableCheckbox.checked = false;
+                    repairCostContainer.classList.remove('hidden');
+                } else {
+                    repairCostContainer.classList.add('hidden');
+                }
+            });
+
+            isNonRepairableCheckbox.addEventListener('change', () => {
+                if (isNonRepairableCheckbox.checked) {
+                    isRepairableCheckbox.checked = false;
+                    repairCostContainer.classList.add('hidden');
+                }
+            });
+
+            // Show/hide packaging or truck load based on order type
+            orderTypeSelect.addEventListener('change', () => {
+                if (orderTypeSelect.value === 'intracity') {
+                    packagingTypeContainer.classList.remove('hidden');
+                    truckLoadContainer.classList.add('hidden');
+                } else if (orderTypeSelect.value === 'intercity') {
+                    packagingTypeContainer.classList.add('hidden');
+                    truckLoadContainer.classList.remove('hidden');
+                } else {
+                    packagingTypeContainer.classList.add('hidden');
+                    truckLoadContainer.classList.add('hidden');
+                }
+            });
+
+            calculateBtn.addEventListener('click', () => {
+                const orderType = orderTypeSelect.value;
+                const packagingType = document.getElementById('packaging-type').value;
+                const truckLoad = document.getElementById('truck-load').value;
+                const houseSize = document.getElementById('house-size').value;
+                const invoiceValue = parseFloat(document.getElementById('invoice-value').value);
+                const damageType = document.getElementById('damage-type').value;
+                const hasPurchaseInvoice = hasInvoiceCheckbox.checked;
+                const isRepairable = isRepairableCheckbox.checked;
+                const isNonRepairable = isNonRepairableCheckbox.checked;
+                const repairCost = parseFloat(repairCostInput.value);
+
+                // Validation
+                if (!orderType || !houseSize || !damageType || (orderType === 'intracity' && !packagingType) || (orderType === 'intercity' && !truckLoad)) {
+                    showModal("Please fill out all required fields.");
+                    return;
+                }
+                
+                if (!isRepairable && !isNonRepairable) {
+                    showModal("Please select if the item is repairable or non-repairable.");
+                    return;
+                }
+
+                if (hasPurchaseInvoice && isNaN(invoiceValue)) {
+                    showModal("Please enter a valid item invoice value.");
+                    return;
+                }
+
+                if (isRepairable && !hasPurchaseInvoice && isNaN(repairCost)) {
+                    showModal("Please enter a valid repair cost as no purchase invoice was provided.");
+                    return;
+                }
+
+
+                const claimLimits = {
+                    intracity: {
+                        single: {
+                            '1bhk-below': 50000,
+                            '2bhk-above': 100000
+                        },
+                        multi: {
+                            '1bhk-below': 100000,
+                            '2bhk-above': 200000
+                        }
+                    },
+                    intercity: {
+                        ptl: {
+                            '1bhk-below': 200000,
+                            '2bhk-above': 400000
+                        },
+                        ftl: {
+                            '1bhk-below': 300000,
+                            '2bhk-above': 500000
+                        }
+                    }
+                };
+
+                const damagePercentages = {
+                    minor: 0.20,
+                    major: 0.60,
+                    extreme: 1.00
+                };
+
+                let limit;
+                if (orderType === 'intracity') {
+                    limit = claimLimits.intracity[packagingType][houseSize];
+                } else {
+                    limit = claimLimits.intercity[truckLoad][houseSize];
+                }
+
+                let finalCompensation;
+                let finalActionMessage;
+                let repairNoteMessage = '';
+
+                if (isRepairable) {
+                    if (!hasPurchaseInvoice) {
+                        if (isNaN(repairCost)) {
+                            showModal("Please enter a valid repair cost as no purchase invoice was provided.");
+                            return;
+                        }
+                        // Case: Repairable, no purchase invoice, has repair invoice
+                        finalCompensation = repairCost;
+                        finalActionMessage = `A valid repair invoice has been provided. Compensation is based on the repair cost of ₹${repairCost.toLocaleString('en-IN')}.`;
+                    } else {
+                        // Case: Repairable, has purchase invoice
+                        const calculatedCompensation = invoiceValue * damagePercentages[damageType];
+                        if (isNaN(repairCost)) {
+                             showModal("Please enter a repair cost estimate for a repairable item.");
+                             return;
+                        }
+                        
+                        finalCompensation = Math.min(calculatedCompensation, repairCost);
+
+                        if (finalCompensation === repairCost) {
+                            finalActionMessage = `The repair estimate of ₹${repairCost.toLocaleString('en-IN')} is lower than the calculated compensation. The final compensation is the repair estimate value.`;
+                        } else {
+                            finalCompensation = calculatedCompensation;
+                            finalActionMessage = `The calculated compensation of ₹${calculatedCompensation.toLocaleString('en-IN')} is lower than the repair estimate. The final compensation is based on the damage classification.`;
+                        }
+                        repairNoteMessage = "Note: As per SOP, repairing the item is the first choice. If the repair cost exceeds the compensation amount, Porter will cover the difference.";
+                    }
+                } else if (isNonRepairable) {
+                    if (hasPurchaseInvoice) {
+                        // Case: Non-repairable, has purchase invoice
+                        finalCompensation = invoiceValue * damagePercentages[damageType];
+                        finalActionMessage = "The item is non-repairable. Compensation is based on the damage classification percentage of the invoice value.";
+                    } else {
+                        // Case: Non-repairable, no purchase invoice
+                        finalCompensation = 5000;
+                        finalActionMessage = "The item is non-repairable, and no purchase invoice was provided. Compensation is capped at ₹5,000.";
+                    }
+                }
+
+                // Apply claim limit at the end for all cases
+                if (finalCompensation > limit) {
+                    finalCompensation = limit;
+                    finalActionMessage += ` However, compensation is limited to the maximum claim amount for your order type, which is ₹${limit.toLocaleString('en-IN')}.`;
+                }
+                
+                // Update results display
+                claimLimitText.textContent = `Claim Limit for this order: ₹${limit.toLocaleString('en-IN')}`;
+                compensationAmountText.textContent = `Final Compensation: ₹${finalCompensation.toLocaleString('en-IN')}`;
+                finalActionText.textContent = finalActionMessage;
+                
+                if (repairNoteMessage) {
+                    repairNoteDiv.textContent = repairNoteMessage;
+                    repairNoteDiv.classList.remove('hidden');
+                } else {
+                    repairNoteDiv.classList.add('hidden');
+                }
+
+                resultsContainer.classList.remove('hidden');
+            });
+
+            // New Section Logic: Bifurcation Table
+            let items = [];
+
+            const updateSummary = () => {
+                let totalPartner = 0;
+                let whiteTotal = 0;
+                let nonWhiteTotal = 0;
+                let grandTotal = 0;
+
+                items.forEach(item => {
+                    const cost = parseFloat(item.cost);
+                    if (!isNaN(cost)) {
+                        const partnerShare = cost;
+                        
+                        totalPartner += partnerShare;
+                        grandTotal += cost;
+
+                        if (item.type === 'white') {
+                            whiteTotal += cost;
+                        } else if (item.type === 'non-white') {
+                            nonWhiteTotal += cost;
+                        }
+                    }
+                });
+
+                totalPartnerCompSpan.textContent = `₹${totalPartner.toLocaleString('en-IN')}`;
+                totalWhiteCompSpan.textContent = `₹${whiteTotal.toLocaleString('en-IN')}`;
+                totalNonWhiteCompSpan.textContent = `₹${nonWhiteTotal.toLocaleString('en-IN')}`;
+                grandTotalCompSpan.textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+            };
+            
+            const createItemRow = (item) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'grid grid-cols-12 gap-4 items-center text-sm mb-2';
+                rowDiv.dataset.id = item.id;
+                
+                const typeSelect = document.createElement('select');
+                typeSelect.className = 'col-span-2 rounded-md border-gray-300 p-1';
+                typeSelect.innerHTML = `<option value="">Select Type</option><option value="white">White</option><option value="non-white">Non-White</option>`;
+                typeSelect.value = item.type;
+                typeSelect.addEventListener('change', (e) => {
+                    item.type = e.target.value;
+                    const itemSelect = rowDiv.querySelector('.item-select');
+                    let options = '';
+                    if (item.type === 'white') {
+                        options = whiteGoods.map(g => `<option value="${g}">${g}</option>`).join('');
+                    } else if (item.type === 'non-white') {
+                        options = nonWhiteGoods.map(g => `<option value="${g}">${g}</option>`).join('');
+                    }
+                    itemSelect.innerHTML = `<option value="">Select Item</option>${options}`;
+                    updateSummary();
+                });
+
+                const itemSelect = document.createElement('select');
+                itemSelect.className = 'col-span-3 rounded-md border-gray-300 p-1 item-select';
+                if (item.type === 'white') {
+                    itemSelect.innerHTML = whiteGoods.map(g => `<option value="${g}">${g}</option>`).join('');
+                } else if (item.type === 'non-white') {
+                     itemSelect.innerHTML = nonWhiteGoods.map(g => `<option value="${g}">${g}</option>`).join('');
+                }
+                itemSelect.value = item.name;
+                itemSelect.addEventListener('change', (e) => {
+                    item.name = e.target.value;
+                });
+
+                const damageTypeSelect = document.createElement('select');
+                damageTypeSelect.className = 'col-span-2 rounded-md border-gray-300 p-1';
+                damageTypeSelect.innerHTML = damageTypes.map(d => `<option value="${d}">${d}</option>`).join('');
+                damageTypeSelect.value = item.damage;
+                damageTypeSelect.addEventListener('change', (e) => {
+                    item.damage = e.target.value;
+                });
+
+                const costInput = document.createElement('input');
+                costInput.type = 'number';
+                costInput.className = 'col-span-2 rounded-md border-gray-300 p-1';
+                costInput.value = item.cost;
+                costInput.addEventListener('input', (e) => {
+                    item.cost = e.target.value;
+                    rowDiv.querySelector('.partner-comp').textContent = `₹${(item.cost).toLocaleString('en-IN')}`;
+                    updateSummary();
+                });
+
+                const porterSpan = document.createElement('span');
+                porterSpan.className = 'col-span-1 porter-comp';
+                porterSpan.textContent = `₹0`; // Porter's share is now 0
+                
+                const partnerSpan = document.createElement('span');
+                partnerSpan.className = 'col-span-1 partner-comp';
+                partnerSpan.textContent = `₹${(item.cost).toLocaleString('en-IN')}`;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'col-span-1 text-red-500 hover:text-red-700';
+                removeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
+                removeBtn.addEventListener('click', () => {
+                    items = items.filter(i => i.id !== item.id);
+                    itemsTable.removeChild(rowDiv);
+                    updateSummary();
+                });
+
+                rowDiv.appendChild(typeSelect);
+                rowDiv.appendChild(itemSelect);
+                rowDiv.appendChild(damageTypeSelect);
+                rowDiv.appendChild(costInput);
+                rowDiv.appendChild(porterSpan);
+                rowDiv.appendChild(partnerSpan);
+                rowDiv.appendChild(removeBtn);
+
+                itemsTable.appendChild(rowDiv);
+            };
+
+            addItemBtn.addEventListener('click', () => {
+                const newItem = {
+                    id: Date.now(),
+                    type: '',
+                    name: '',
+                    damage: 'Minor',
+                    cost: 0
+                };
+                items.push(newItem);
+                createItemRow(newItem);
+            });
+
+            // Function to create and show a simple modal for alerts
+            function showModal(message) {
+                const modalDiv = document.createElement('div');
+                modalDiv.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4';
+                modalDiv.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm mx-auto">
+                        <p class="text-center text-gray-800 font-semibold">${message}</p>
+                        <div class="mt-4 text-center">
+                            <button id="close-modal-btn" class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-full hover:bg-indigo-700">OK</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modalDiv);
+                document.getElementById('close-modal-btn').addEventListener('click', () => {
+                    document.body.removeChild(modalDiv);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
