@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Damage Claims Desk</title>
+    <title>Smart Damage Claim Desk</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2canvas for screenshot functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -16,9 +18,9 @@
     </style>
 </head>
 <body class="bg-gray-100 p-8">
-    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-8" id="main-content-area">
         <!-- Main Title -->
-        <h1 class="text-3xl font-bold text-center text-gray-800">Smart Damage Claims Desk</h1>
+        <h1 class="text-3xl font-bold text-center text-gray-800">Smart Damage Claim Desk</h1>
         
         <!-- Welcome Message & Instructions -->
         <div class="text-center text-gray-600">
@@ -132,7 +134,7 @@
         </div>
         
         <!-- New Section: Repair & Compensation Bifurcations -->
-        <div class="bg-gray-50 p-6 rounded-xl border-t-2 border-gray-200">
+        <div class="bg-gray-50 p-6 rounded-xl border-t-2 border-gray-200" id="bifurcation-section">
             <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Repair & Compensation Bifurcations</h3>
             <p class="text-sm text-center text-gray-600 mb-4">Add items below to calculate the compensation split between Porter and the Partner.</p>
             
@@ -140,12 +142,12 @@
                 <!-- Table Header -->
                 <div class="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700 border-b pb-2">
                     <div class="col-span-2">Type</div>
-                    <div class="col-span-3">Item</div>
-                    <div class="col-span-2">Damage Type</div>
+                    <div class="col-span-3">Item</div> 
+                    <div class="col-span-2">Damage Type</div> 
                     <div class="col-span-2">Repair/Comp Cost (₹)</div>
                     <div class="col-span-1">Porter</div>
                     <div class="col-span-1">Partner</div>
-                    <div class="col-span-1"></div>
+                    <div class="col-span-1"></div> <!-- Column for remove button -->
                 </div>
             </div>
 
@@ -173,6 +175,9 @@
                         <span class="text-lg font-bold text-gray-800">Grand Total Amount:</span>
                         <span id="grand-total-comp" class="text-lg font-bold text-gray-800">₹0</span>
                     </div>
+                    <button id="save-screenshot-btn" class="mt-4 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-green-600 transition-colors duration-300">
+                        Save Screenshot
+                    </button>
                 </div>
             </div>
         </div>
@@ -182,18 +187,18 @@
             <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Standard Claim Process Checklist</h3>
             <ul class="list-disc list-inside space-y-2 text-gray-600">
                 <li><strong class="text-gray-900">Initial Report:</strong> Was the damage reported within 7 days of shifting completion?</li>
-                <li><strong class="text-gray-900">Documentation:</strong> Did the customer submit proof (photos/video) within 48 hours of reporting? (If not, send 12h/24h reminders).</li>
-                <li><strong class="text-gray-900">Un-invoiced Items:</strong> If no invoice, is the item a carton or a self-packed good? (Caps apply).</li>
+                <li><strong class="text-gray-900">Documentation:</strong> Did the customer submit proof (photos/video) within 7 days of reporting? (If not, send 12h/24h reminders).</li>
                 <li><strong class="text-gray-900">Pre-existing Damage:</strong> Does the vendor have photo proof of pre-existing damage? If not, it's assumed to be new damage.</li>
-                <li><strong class="text-gray-900">Repair-First Approach:</strong> If repairable, has Urban Company been booked, or has the customer provided a GST repair estimate?</li>
+                <li><strong class="text-gray-900">Repair-First Approach:</strong> If repairable, has Urban Company been booked, or has the customer provided a GST repair estimate from an authorized service center?</li>
+                <li><strong class="text-gray-900">Un-invoiced Items:</strong> If no invoice, of any item goods or a porter carton boxes? (Caps apply).</li>
                 <li><strong class="text-gray-900">Finalization:</strong> Once resolved, escalate the case to the city team with the summary, penalty, and photos.</li>
-                <li><strong class="text-gray-900">Missing Items:</strong> Did the vendor return the item within 48 hours? If not, proceed with refund as per invoice/cap.</li>
+                <li><strong class="text-gray-900">Missing Items:</strong> Did the vendor return the item within 48/72 hours? If not, proceed with refund as per invoice/cap.</li>
             </ul>
         </div>
         
         <!-- Footer -->
         <footer class="text-center text-gray-500 text-sm mt-8">
-            &copy; 2025 Created by Shahalam Khan | Business Executive | House Shifting | All rights reserved.
+            &copy; 2025. Created by Shahalam Khan - Business Executive | House Shifting Porter| All rights reserved.
         </footer>
     </div>
 
@@ -221,11 +226,13 @@
             const totalWhiteCompSpan = document.getElementById('total-white-comp');
             const totalNonWhiteCompSpan = document.getElementById('total-non-white-comp');
             const grandTotalCompSpan = document.getElementById('grand-total-comp');
+            const saveScreenshotBtn = document.getElementById('save-screenshot-btn'); // New button
+            const mainContentArea = document.getElementById('main-content-area'); // Target the entire main content area
 
             // Data for the new section
             const whiteGoods = ['TV', 'Fridge', 'Water Purifier', 'Geyser', 'Washing Machine', 'Microwave oven', 'Dishwasher', 'Split AC', 'Window AC'];
             const nonWhiteGoods = ['Bed', 'Sofa', 'Almirah', 'Ceiling Fan', 'Bookshelf', 'Tables', 'Chairs', 'Others'];
-            const damageTypes = ['Minor', 'Major', 'Extreme'];
+            const damageTypes = ['Minor', 'Major', 'Extreme', 'Missing']; // Added 'Missing'
 
             // Mutually exclusive checkbox logic
             isRepairableCheckbox.addEventListener('change', () => {
@@ -318,7 +325,8 @@
                 const damagePercentages = {
                     minor: 0.20,
                     major: 0.60,
-                    extreme: 1.00
+                    extreme: 1.00,
+                    missing: 1.00 // Assuming 100% compensation for missing, subject to invoice/cap
                 };
 
                 let limit;
@@ -332,7 +340,15 @@
                 let finalActionMessage;
                 let repairNoteMessage = '';
 
-                if (isRepairable) {
+                if (damageType === 'missing') {
+                    if (hasPurchaseInvoice) {
+                        finalCompensation = invoiceValue * damagePercentages[damageType];
+                        finalActionMessage = "Item is missing. Compensation is based on 100% of the item's invoice value.";
+                    } else {
+                        finalCompensation = 5000;
+                        finalActionMessage = "Item is missing, and no purchase invoice was provided. Compensation is capped at ₹5,000.";
+                    }
+                } else if (isRepairable) {
                     if (!hasPurchaseInvoice) {
                         if (isNaN(repairCost)) {
                             showModal("Please enter a valid repair cost as no purchase invoice was provided.");
@@ -425,11 +441,13 @@
             
             const createItemRow = (item) => {
                 const rowDiv = document.createElement('div');
+                // Reverted to grid-cols-12 to match the user's screenshot layout
                 rowDiv.className = 'grid grid-cols-12 gap-4 items-center text-sm mb-2';
                 rowDiv.dataset.id = item.id;
                 
                 const typeSelect = document.createElement('select');
-                typeSelect.className = 'col-span-2 rounded-md border-gray-300 p-1';
+                // Adjusted col-span for better distribution and added w-full
+                typeSelect.className = 'col-span-2 rounded-md border-gray-300 p-1 w-full';
                 typeSelect.innerHTML = `<option value="">Select Type</option><option value="white">White</option><option value="non-white">Non-White</option>`;
                 typeSelect.value = item.type;
                 typeSelect.addEventListener('change', (e) => {
@@ -446,7 +464,8 @@
                 });
 
                 const itemSelect = document.createElement('select');
-                itemSelect.className = 'col-span-3 rounded-md border-gray-300 p-1 item-select';
+                // Adjusted col-span for better distribution and added w-full
+                itemSelect.className = 'col-span-3 rounded-md border-gray-300 p-1 item-select w-full'; // Reverted col-span to 3
                 if (item.type === 'white') {
                     itemSelect.innerHTML = whiteGoods.map(g => `<option value="${g}">${g}</option>`).join('');
                 } else if (item.type === 'non-white') {
@@ -458,7 +477,8 @@
                 });
 
                 const damageTypeSelect = document.createElement('select');
-                damageTypeSelect.className = 'col-span-2 rounded-md border-gray-300 p-1';
+                // Adjusted col-span for better distribution and added w-full
+                damageTypeSelect.className = 'col-span-2 rounded-md border-gray-300 p-1 w-full'; // Reverted col-span to 2
                 damageTypeSelect.innerHTML = damageTypes.map(d => `<option value="${d}">${d}</option>`).join('');
                 damageTypeSelect.value = item.damage;
                 damageTypeSelect.addEventListener('change', (e) => {
@@ -467,7 +487,8 @@
 
                 const costInput = document.createElement('input');
                 costInput.type = 'number';
-                costInput.className = 'col-span-2 rounded-md border-gray-300 p-1';
+                // Adjusted col-span for better distribution and added w-full
+                costInput.className = 'col-span-2 rounded-md border-gray-300 p-1 w-full'; 
                 costInput.value = item.cost;
                 costInput.addEventListener('input', (e) => {
                     item.cost = e.target.value;
@@ -496,7 +517,7 @@
                 rowDiv.appendChild(itemSelect);
                 rowDiv.appendChild(damageTypeSelect);
                 rowDiv.appendChild(costInput);
-                rowDiv.appendChild(porterSpan);
+                rowDiv.appendChild(porterSpan); // Re-added porterSpan
                 rowDiv.appendChild(partnerSpan);
                 rowDiv.appendChild(removeBtn);
 
@@ -532,6 +553,27 @@
                     document.body.removeChild(modalDiv);
                 });
             }
+
+            // Screenshot functionality
+            saveScreenshotBtn.addEventListener('click', () => {
+                const elementToCapture = mainContentArea; // Target the entire main content area
+                if (elementToCapture) {
+                    html2canvas(elementToCapture, {
+                        scale: 2, // Capture at a higher resolution for better quality
+                        useCORS: true // Important for handling images/fonts loaded from other domains
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = 'SmartDamageClaimsDesk_Screenshot.png';
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                    }).catch(error => {
+                        console.error('Error capturing screenshot:', error);
+                        showModal('Failed to capture screenshot. Please try again.');
+                    });
+                } else {
+                    showModal('Content area not found for screenshot.');
+                }
+            });
         });
     </script>
 </body>
